@@ -1,38 +1,300 @@
-// Sample code for Project 2A
-// Draws 3D Simple Shapes (box, cylinder, sphere, cone, torus)
+///// Instancing is the stars //////
+///// I will mark the begining with a comment /////
+
 
 let time = 0;  // track time passing, used to move the objects
-let debOn = false;
+let totX = 0;
+let totY = 0;
+let backR = 106;
+let backG = 198;
+let backB = 235;
+let xTime = 0;
+let yTime = 0;
+let xTo = 0;
+let starYstart = -1200;
+let maxAngle = 77;
+let camYTemp = 0;
+let rotationSpeed = 0;
+let planTot = 0;
 
 function setup() {
   createCanvas(600, 600, WEBGL);
   let fov = 60.0;  // 60 degrees FOV
   perspective(PI * fov / 180.0, width / height, 0.1, 2000);
-  //camera(0, 10, 100, 0, 10, 0, 0, 1, 0);  // from, at, up
 }
 
-// called repeatedly to draw new per-frame images
 function draw() {
-  background(255); 
-  //orbitControl(3, 3, 3);
-  let x = 100 * cos(time * 0.1);
-  let z = 100 * sin(time * 0.1);
-  camera(x, 10, z, 0, 10, 0, 0, 1, 0);  // from, at, up
+  background(backR, backG, backB);
+  orbitControl(3, 3, 3);
   ambientLight(60, 60, 60);  // include some light even in shadows
-  pointLight(255, 255, 255, 100, -100, 300);  // set light position
-  noStroke();  // don't draw polygon outlines
+  pointLight(255, 255, 255, 100, -100, 300);  
+  pointLight(255, 255, 255, 1060, -3635, -600);  
+  noStroke(); 
 
+  if (time <= 8) {
+    push();
+    ramp();
+    pop();
+    bikeOnRamp();
+    push();
+    ramp();
+    pop();
+  } else if (time <= 13) {
+    cameraMove();
+    push();
+    ramp();
+    pop();
+  } else if (time <= 21) { //24 -3
+    changeColor();
+  } else if (time <= 57) { // 73 -16
+    ///// INSTANCING /////
+    ///// There are several stars created per for loop /////
+
+    for (let i = 0; i < 2; i++) {
+      push();
+      translate(350 + (i * 10), starYstart - (i * 800) - 200, -800);
+      star();
+      pop();
+    }
+    for (let i = 0; i < 2; i++) {
+      push();
+      translate(900 - (i * 10), starYstart - (i * 800) - 20, -800);
+      star();
+      pop();
+    }
+    for (let i = 0; i < 2; i++) {
+      push();
+      translate(600 + (i * 10), starYstart - (i * 800) + 100, -800);
+      star();
+      pop();
+    }
+    for (let i = 0; i < 2; i++) {
+      push();
+      translate(1400 + (i * 10), starYstart - (i * 800) + 100, -800);
+      star();
+      pop();
+    }
+    starFall();
+  } else if (time <= 62) { // 78 -16
+    maxAngle -= .5;
+    maxAngle = max(0, maxAngle);
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-1 * toRad(maxAngle));
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  } else if (time <= 69) { // 85 -16
+    camYTemp = totY + (5 * (time - 62));    //////// changes with time
+    camera(totX, camYTemp, 130, totX, camYTemp, 0, 0, 1, 0);
+    push();
+    translate(totX, totY, 0);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  } else if (time <= 72) { // 88 -16
+    camera(totX, camYTemp, 130, totX, camYTemp, 0, 0, 1, 0);
+    push();
+    translate(totX, totY, 0);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  } else if (time <= 74) { //90 -16
+    push();
+    translate(totX, totY, 0);
+    scale(0.7);
+    rotationSpeed *= 0.999;
+    drawWholeBike(-1 * rotationSpeed);
+    pop();
+  } else if (time <= 88.2) { // 104.2 -16
+    planTot = ((time - 74) * 10);  ////////// changes with time
+    stillBike();
+  } else { // 120 -16
+    stillBike();
+    //let angle = (time - 88.2) * 0.5;    ////////// changes with time
+    //let camY = camYTemp + (cos(angle) * 130);
+    //let camZ = 130 + (sin(angle) * 130);
+    //camera(totX, camY, camZ, totX, camYTemp, 0, 0, 1, 0);
+  }
+  console.log(time);
+
+  time += 0.03;  // update the time
+}
+
+function stillBike() {
+  push();
+  translate(totX, totY, 0);
+  scale(0.7);
+  drawWholeBike(0);
+  pop();
+
+  push();
+  translate(956, -2606.5 - planTot, -30);
+  scale(4);
+  planet();
+  pop();
+}
+
+function starFall() {
+    angle = toRad(77);
+    totX += 2 * cos(angle);
+    totY -= 2 * sin(angle);
+    constUp();
+    camera(totX, totY, 130, totX, totY, 0, 0, 1, 0);
+}
+
+//goes in a bit more and and changes the background color
+function changeColor() {
+  let colorChange = (time) * .05;
+  backR = max(16, backR - colorChange);
+  backG = max(15, backG - colorChange);
+  backB = max(36, backB - colorChange);
+
+  let xTemp = min(totX, (time - 13) * 70 + xTime);  
+  camera(xTemp, yTime, 130, xTo, yTime, 0, 0, 1, 0);
+  constUp();
+}
+
+//bike goes up and camera goes in 
+function cameraMove() {
+    angle = toRad(77);
+    totX += 2 * cos(angle);
+    totY -= 2 * sin(angle);
+    xTime = min(totX, (time - 8) * 70 - 100);
+    yTime = max(totY, (time - 8) * -100);
+    xTo = min(totX, xTime + 200);
+    camera(xTime, yTime, 130, xTo, yTime, 0, 0, 1, 0);
+    constUp();
+}
+
+//constant up motion
+function constUp() {
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-angle);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+}
+
+// bike goes up the ramp
+function bikeOnRamp() {
+  camera(-100, 0, 130, 100, 0, 0, 0, 1, 0);
+
+  let flatRamp = 4.5;
+  let seg1 = 4.8;
+  let seg2 = 5.3;
+  let seg3 = 5.8;
+  let seg4 = 6.5;
+  let seg5 = 7;
+  let seg6 = 7.5;
+  let seg7 = 8;
   
+  // 5 10 18 30 45 60 77
+  push();
+  translate(0, 18, 0);
+
+  let angle = 0;
+  let speed = 2;
+  if (time <= flatRamp) {
+    totX += time * 0.5;
+    push();
+    translate(totX, 0, 0);
+    scale(0.7)
+    drawWholeBike(time);
+    pop();
+  } else if (time <= seg1) {
+    angle = toRad(5);
+    totX += speed * cos(angle);
+    totY -= speed * sin(angle);
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-angle);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  } else if (time <= seg2) {
+    angle = toRad(10);
+    totX += speed * cos(angle);
+    totY -= speed * sin(angle);
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-angle);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  } else if (time <= seg3) {
+    angle = toRad(18);
+    totX += speed * cos(angle);
+    totY -= speed * sin(angle);
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-angle);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  }else if (time <= seg4) {
+    angle = toRad(30);
+    totX += speed * cos(angle);
+    totY -= speed * sin(angle);
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-angle);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  }else if (time <= seg5) {
+    angle = toRad(45);
+    totX += speed * cos(angle);
+    totY -= speed * sin(angle);
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-angle);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  }else if (time <= seg6) {
+    angle = toRad(60);
+    totX += speed * cos(angle);
+    totY -= speed * sin(angle);
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-angle);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  } else if (time <= seg7) {
+    angle = toRad(77);
+    totX += speed * cos(angle);
+    totY -= speed * sin(angle);
+    push();
+    translate(totX, totY, 0);
+    rotateZ(-angle);
+    scale(0.7);
+    drawWholeBike(time);
+    pop();
+  }
+  pop();
+}
+
+function drawWholeBike(time) {
   //back wheel
   push();
   translate(-25, 20);
+  push ();
+  rotateZ(time);
   Wheel();
+  pop();
   pop();
   
   //front wheel & frame
   push();
   translate(25, 20);
+  push();
+  rotateZ(time);
   Wheel();
+  pop();
+
   frontWheelHolder(1);
   frontWheelHolder(-1);
   pop();
@@ -54,11 +316,17 @@ function draw() {
   backSupport(1);
   backSupport(-1);
 
+  push();
+  translate(-8, 19, 0);
+  rotateZ(2 * time);
   pedalHolder();
+  pop();
 
-  pedals();
-
-  time += 0.03;  // update the time
+  push();
+  translate(-8, 19, 0);
+  rotateZ(2 * time);
+  pedals(time);
+  pop();
 }
 
 function toRad(deg) {
@@ -397,7 +665,7 @@ function backSupport(sign) {
 function pedalHolder() {
   setGreyTexture();
   push();
-  translate(-8, 19, 0);
+
   // main axil
   push();
   rotateX(toRad(90));
@@ -434,17 +702,15 @@ function pedalHolder() {
   pop();
 }
 
-function pedals() {
+function pedals(time) {
   setPurpleTexture();
-
   push();
-
-  translate(-8, 19, 0);
-  //outside of pedals 
   let sign = 1;
   for (let i = 0; i < 2; i ++) {
     push();
     translate(0, sign * 8, sign * 7);
+    push();
+    rotateZ(-2 * time)
     //closer edge
     push();
     rotateZ(toRad(90));
@@ -471,9 +737,10 @@ function pedals() {
     translate(4, 0, 0);
     sphere(.6);
     pop();
-
     pop();
 
+    pop();
+    
     //sides
     push();
     translate(-2, sign * 8, sign * 10);
@@ -493,6 +760,7 @@ function pedals() {
   for (let i = 0; i < 2; i ++) {
     push();
     translate(0, sign * 8, sign * 7);
+    rotateZ(-2 * time)
     for (let j = 0; j < 3; j ++){
       translate(0, 0, sign * 1.5 );
       push();
@@ -505,6 +773,13 @@ function pedals() {
   }
   pop(); 
 }
+
+
+
+/////
+/////    Textures
+/////
+
 
 function setBlueTexture() {
   fill(0, 206, 209);
@@ -532,4 +807,115 @@ function setBlackTexture() {
   specularMaterial(0);
   shininess(1);
   metalness(1);
+}
+
+/////
+/////    star
+/////
+
+function star() {
+  push();
+  fill('yellow');
+  sphere(10);
+  for(let i = 0; i < 16; i++) {
+    push();
+    rotateZ(i * PI / 8);
+    translate(0, 30, 0);
+    cone(8, 50);
+    pop();
+  }
+  pop(); 
+}
+
+/////
+/////    planet
+/////
+
+function planet() {
+  push();
+  fill('orange');
+  sphere(10);
+  pop();
+
+  push();
+  fill('orange');
+  for (let j = 0; j < 8; j++) {
+    rotateZ(j * PI / 5);
+    for(let i = 0; i < 6; i++) {
+      push();
+      rotateX(i * PI / 3);
+      translate(0, 0, 9);
+      torus(1, 1);
+      pop();
+    }
+  }
+  pop();
+ 
+
+  push();
+  fill('grey');
+  rotateX(toRad(90));
+  torus(15, 1, 24, 3);
+  pop();
+}
+
+/////
+/////    ramp
+/////
+
+function ramp() {
+  fill('grey');
+  push();
+  //base road
+  translate(60, 50, 0);
+  box(200, 20, 30);
+  pop();
+
+  //ramp
+  fill('grey')
+  push();
+  translate(175, 48.5, 0);
+  push();
+  rotateZ(-toRad(5));
+  box(40, 20, 30);
+  pop();
+
+  translate(40, -5.4, 0);
+  push();
+  rotateZ(-toRad(10));
+  box(40, 20, 30);
+  pop();
+
+  translate(40, -10, 0);
+  push();
+  rotateZ(-toRad(18));
+  box(40, 20, 30);
+  pop();
+
+  translate(38, -17, 0);
+  push();
+  rotateZ(-toRad(30));
+  box(40, 20, 30);
+  pop();
+
+  translate(33.5, -25.5, 0);
+  push();
+  rotateZ(-toRad(45));
+  box(40, 20, 30);
+  pop();
+
+  translate(25.5, -33.2, 0);
+  push();
+  rotateZ(-toRad(60));
+  box(40, 20, 30);
+  pop();
+
+  translate(16, -45, 0);
+  push();
+  rotateZ(-toRad(77));
+  box(60, 20, 30);
+  pop();
+
+
+  pop();
 }
